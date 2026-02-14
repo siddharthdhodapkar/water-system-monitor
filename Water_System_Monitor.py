@@ -39,12 +39,13 @@ df = load_data()
 
 EMAIL_ADDRESS = st.secrets["EMAIL_ADDRESS"]
 EMAIL_PASSWORD = st.secrets["EMAIL_PASSWORD"]
+EMAIL_SENT = st.secrets["EMAIL_SENT"]
 
 def send_email(subject, body, image_file=None):
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = EMAIL_ADDRESS
-    msg["To"] = "siddharth.dhodapkar@eaiiadvisors.in"
+    msg["To"] = EMAIL_SENT
     msg.set_content(body)
 
     if image_file is not None:
@@ -268,3 +269,4 @@ Description:
 
 else:
     st.info("🔎 Please enter a Water System ID")
+
