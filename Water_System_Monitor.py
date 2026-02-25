@@ -38,49 +38,33 @@ df = load_data()
 # ---------------------------------------------------
 # GOOGLE SHEETS WRITE CONFIG (For Logs)
 # ---------------------------------------------------
-# This connects to a SEPARATE Google Sheet for saving
-# stock alerts, issue logs, and daily limit tracking.
-#
-# SETUP INSTRUCTIONS:
-# 1. Go to https://console.cloud.google.com
-# 2. Create a project → Enable "Google Sheets API" & "Google Drive API"
-# 3. Create a Service Account → Download JSON key
-# 4. Add the JSON key contents to Streamlit secrets (see below)
-# 5. Create a NEW Google Sheet named "Water Monitor Logs"
-# 6. Share that sheet with the service account email (Editor access)
-# 7. Inside the sheet, create 3 tabs:
-#      - "Stock Alerts"
-#      - "Issue Log"
-#      - "Daily Limit"
-# ---------------------------------------------------
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
-# --- LOG SHEET ID ---
-# This is the ID from your Google Sheet URL:
-# https://docs.google.com/spreadsheets/d/<THIS_PART>/edit
 LOG_SHEET_ID = "1Wleb4aTjGF5OV5PDNoI7GzqNyD4TXDMyb9B-xFF5vL0"
+
+GCP_CREDENTIALS = {
+    "type": "service_account",
+    "project_id": "water-monitor-system-488307",
+    "private_key_id": "1da946b9a0feb705d183c49e2d10006e825bd8a6",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDKDWVAAi8HrixB\nl6ESloZXZy2kBuZEPrPz4gEkgM/l057yWqsIkKoFCMqCetRdwQb89vRT7bJkx93X\n/1qDEmQ52sTTnLPDejFhUheTn26QuI6yQ59HDRYcp0glr8k/5LjtjcbRs7hgWowS\nmPcQiDUU7xfsJyNFo+OEPvJroJkrjIQs+jyunftawHpKzpwV4f/vBJ4ksB1qeUHi\n41T3u6l+b5vFhNlZxCQLvu8CS0sK02osd9novHIhBaMLdrfMOlREsPQJYVB7TAey\nvKSkgIcyX976RThz6cPHcb0GKDu1vA68SOxVxwOvRqfIT5dnQs9dJqIufB32AshZ\nt4/SUB0BAgMBAAECggEAJ6EU+Mb03nbE62CIERNA6ieshf1scHoz5WOwga5aGGO3\nSyWJYjatgitFPO5GdNUFP9xX85YtZSLmWhUVdZvH2KkV7cNQZsiyorntMeEVWIE6\nS7CDrvXcHmaY+ftOZ5++vakPE9ZCFXPtAUDLRIzSjHaQpJrQijoox6lo9r8bC7U8\ncW6zInahPsfbnbabdurAd+z8JoQEYfCLtq30z46yWDJ6dWGFgAHu7FXbTZPUCLnT\nYs5zcXXsOqIRuf454SqqaOzRWCnCxkLlxINz60fARi2xNKGcwtp7EY5vszvCf56M\n5uHC0hJEnmMLLyTDaD5VNyZ27UY6DXu+M5FgLJzk2QKBgQDt1NUy389GBNLAPdpc\nxKAYnD49OFVoYcHrIEcyv3VzPCDWs9LsyUHk/jDEIByI0wVENHCwZEOLTUSGJHfX\nM9gQ6dzjYk30W7Wou9zqDOMekkxcYC+0aEPqT9pWWJnn/ADKSXzrHQ0HHoAzuQUy\nhS060ol+DXW6Bpm4r2lx+rfqPwKBgQDZfNjUF1icxWV0J3AZ7LeeiW9shjjK0q9/\nuQ6KjKXuGwRZw76IhBetYdMBHG8st7Ve4EqXu/iHib2ZvASTabrRZ1na8Isn3Qjj\nI3YgMGCDtmH9y7LI03XGG6tKwyfYQkEsCvEYINhxvPSgjF0vDNREQCJq1f+XrsRm\n82e70OGovwKBgQCa3qEGQ9+BRNrH/H8ZMaDe5b9RtkFHe4D/T0GNtkcRBvKLXQXY\n0yVprGytCgwKvP8M7ukCtAeXynT4tP6k0Em+mcsQ9o60tJOSkOLGNiYfXj0DWk82\nNz8icWVIHOH7wonxL/F8WKqHHEF3bOAJidduGnMV9kXXIT0wmmkbo5vnmQKBgEEE\nWa3N7Oew+0tmHtUhNyNl4rGGzqOTqHN+VyKEOXadDQfoxKT7GDj07ad/YJz1rnrW\ngnYp83pRayTyWEvZZ8gCJZKWJoOcSHPevgmRbMjzVQgSRThUPvkifGq1PMwhwmnw\nO3MDHrGh01/Llm/iXfKpWaCmqOonjP9Z9MDpCQzxAoGBALxELn1Lc15+YA/WBe7Q\nEVUtvZMdo7sVDGedopaEA4xZpKgwuf+uk3cbzMkgpzvCsCXZtnF4q+N6zQcO2Ogt\nYTg6Pg93b3lkpIRwcXcVIlGtXQOISCjuLbeRTXBZj4mLdZpBY1yCSeFaOav/R0x5\neMlIxFJKyDJNPJvPTDPHG6UI\n-----END PRIVATE KEY-----\n",
+    "client_email": "water-monitoring-app@water-monitor-system-488307.iam.gserviceaccount.com",
+    "client_id": "101213988596292556070",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/water-monitoring-app%40water-monitor-system-488307.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+}
 
 
 @st.cache_resource
 def get_gspread_client():
-    """Authenticate and return a gspread client using Streamlit secrets."""
-    creds_dict = {
-        "type": st.secrets["gcp_service_account"]["type"],
-        "project_id": st.secrets["gcp_service_account"]["project_id"],
-        "private_key_id": st.secrets["gcp_service_account"]["private_key_id"],
-        "private_key": st.secrets["gcp_service_account"]["private_key"],
-        "client_email": st.secrets["gcp_service_account"]["client_email"],
-        "client_id": st.secrets["gcp_service_account"]["client_id"],
-        "auth_uri": st.secrets["gcp_service_account"]["auth_uri"],
-        "token_uri": st.secrets["gcp_service_account"]["token_uri"],
-        "auth_provider_x509_cert_url": st.secrets["gcp_service_account"]["auth_provider_x509_cert_url"],
-        "client_x509_cert_url": st.secrets["gcp_service_account"]["client_x509_cert_url"],
-    }
-    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+    """Authenticate and return a gspread client."""
+    creds = Credentials.from_service_account_info(GCP_CREDENTIALS, scopes=SCOPES)
     client = gspread.authorize(creds)
     return client
 
@@ -121,7 +105,7 @@ def send_email(subject, body, image_file=None):
         smtp.send_message(msg)
 
 # ---------------------------------------------------
-# LOG FUNCTIONS (Now saving to Google Sheets!)
+# LOG FUNCTIONS (Saving to Google Sheets)
 # ---------------------------------------------------
 
 def append_stock_log(site_id, stock_value):
@@ -129,7 +113,6 @@ def append_stock_log(site_id, stock_value):
     try:
         sheet = get_log_sheet("Stock Alerts")
 
-        # Add headers if sheet is empty
         if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
             sheet.append_row(["Site ID", "Stock Level", "Alert Date"])
 
@@ -150,7 +133,6 @@ def append_issue_log(site_id, description):
     try:
         sheet = get_log_sheet("Issue Log")
 
-        # Add headers if sheet is empty
         if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
             sheet.append_row(["Site ID", "Description", "Issue Date"])
 
@@ -172,7 +154,6 @@ def load_daily_limit():
         sheet = get_log_sheet("Daily Limit")
         records = sheet.get_all_records()
 
-        # Convert list of dicts to {site_id: date} format
         limits = {}
         for row in records:
             limits[str(row.get("Site ID", ""))] = str(row.get("Last Alert Date", ""))
@@ -186,19 +167,15 @@ def save_daily_limit(site_id, date_str):
     try:
         sheet = get_log_sheet("Daily Limit")
 
-        # Add headers if sheet is empty
         if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
             sheet.append_row(["Site ID", "Last Alert Date"])
 
-        # Check if site_id already exists → update it
         all_values = sheet.get_all_values()
         for i, row in enumerate(all_values):
             if len(row) > 0 and str(row[0]).strip() == str(site_id).strip():
-                # Found existing row → update column B (date)
                 sheet.update_cell(i + 1, 2, date_str)
                 return True
 
-        # Not found → append new row
         sheet.append_row([site_id, date_str])
         return True
     except Exception as e:
@@ -277,7 +254,7 @@ if site_input:
                     append_stock_log(site_input, stock_value)
                     save_daily_limit(site_input, today)
 
-                    st.success("📧 Alert Email Sent")
+                    st.success("📧 Alert Email Sent & Saved to Google Sheet")
             else:
                 st.info("Stock alert already sent today for this site.")
 
@@ -350,11 +327,10 @@ Description:
 
                 append_issue_log(site_input, issue_description)
 
-                st.success("✅ Issue submitted")
+                st.success("✅ Issue submitted & saved to Google Sheet.")
 
     else:
         st.error("❌ No matching Site ID found")
 
 else:
     st.info("🔎 Please enter a Water System ID")
-
