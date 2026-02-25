@@ -277,7 +277,7 @@ if site_input:
                     append_stock_log(site_input, stock_value)
                     save_daily_limit(site_input, today)
 
-                    st.success("📧 Alert Email Sent & Saved to Google Sheet")
+                    st.success("📧 Alert Email Sent")
             else:
                 st.info("Stock alert already sent today for this site.")
 
@@ -350,10 +350,11 @@ Description:
 
                 append_issue_log(site_input, issue_description)
 
-                st.success("✅ Issue submitted & saved to Google Sheet.")
+                st.success("✅ Issue submitted")
 
     else:
         st.error("❌ No matching Site ID found")
 
 else:
     st.info("🔎 Please enter a Water System ID")
+
