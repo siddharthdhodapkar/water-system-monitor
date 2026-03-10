@@ -3,8 +3,6 @@
 Created on Sat Feb 14 12:10:34 2026
 
 @author: siddharth.dhodapkar_
-
-Updated: Google Sheets auto-save for logs (stock alerts, issues, daily limits)
 """
 
 import streamlit as st
@@ -12,15 +10,15 @@ import pandas as pd
 import smtplib
 from email.message import EmailMessage
 from datetime import datetime
-import gspread
-from google.oauth2.service_account import Credentials
+import os
+import json
 
 st.set_page_config(page_title="Water System Monitoring", layout="wide")
 
 st.title("💧 Water System Monitoring Portal")
 
 # ---------------------------------------------------
-# GOOGLE SHEET CONFIG (READ - Main Data)
+# GOOGLE SHEET CONFIG (READ ONLY)
 # ---------------------------------------------------
 
 SHEET_ID = "10Yj8d6Mgg8iQS6kwTBb2GJt7l2HEF7s47hkC9PSjYY0"
@@ -36,48 +34,7 @@ def load_data():
 df = load_data()
 
 # ---------------------------------------------------
-# GOOGLE SHEETS WRITE CONFIG (For Logs)
-# ---------------------------------------------------
-
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
-
-LOG_SHEET_ID = "1Wleb4aTjGF5OV5PDNoI7GzqNyD4TXDMyb9B-xFF5vL0"
-
-GCP_CREDENTIALS = {
-    "type": "service_account",
-    "project_id": "water-monitor-system-488307",
-    "private_key_id": "1da946b9a0feb705d183c49e2d10006e825bd8a6",
-    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDKDWVAAi8HrixB\nl6ESloZXZy2kBuZEPrPz4gEkgM/l057yWqsIkKoFCMqCetRdwQb89vRT7bJkx93X\n/1qDEmQ52sTTnLPDejFhUheTn26QuI6yQ59HDRYcp0glr8k/5LjtjcbRs7hgWowS\nmPcQiDUU7xfsJyNFo+OEPvJroJkrjIQs+jyunftawHpKzpwV4f/vBJ4ksB1qeUHi\n41T3u6l+b5vFhNlZxCQLvu8CS0sK02osd9novHIhBaMLdrfMOlREsPQJYVB7TAey\nvKSkgIcyX976RThz6cPHcb0GKDu1vA68SOxVxwOvRqfIT5dnQs9dJqIufB32AshZ\nt4/SUB0BAgMBAAECggEAJ6EU+Mb03nbE62CIERNA6ieshf1scHoz5WOwga5aGGO3\nSyWJYjatgitFPO5GdNUFP9xX85YtZSLmWhUVdZvH2KkV7cNQZsiyorntMeEVWIE6\nS7CDrvXcHmaY+ftOZ5++vakPE9ZCFXPtAUDLRIzSjHaQpJrQijoox6lo9r8bC7U8\ncW6zInahPsfbnbabdurAd+z8JoQEYfCLtq30z46yWDJ6dWGFgAHu7FXbTZPUCLnT\nYs5zcXXsOqIRuf454SqqaOzRWCnCxkLlxINz60fARi2xNKGcwtp7EY5vszvCf56M\n5uHC0hJEnmMLLyTDaD5VNyZ27UY6DXu+M5FgLJzk2QKBgQDt1NUy389GBNLAPdpc\nxKAYnD49OFVoYcHrIEcyv3VzPCDWs9LsyUHk/jDEIByI0wVENHCwZEOLTUSGJHfX\nM9gQ6dzjYk30W7Wou9zqDOMekkxcYC+0aEPqT9pWWJnn/ADKSXzrHQ0HHoAzuQUy\nhS060ol+DXW6Bpm4r2lx+rfqPwKBgQDZfNjUF1icxWV0J3AZ7LeeiW9shjjK0q9/\nuQ6KjKXuGwRZw76IhBetYdMBHG8st7Ve4EqXu/iHib2ZvASTabrRZ1na8Isn3Qjj\nI3YgMGCDtmH9y7LI03XGG6tKwyfYQkEsCvEYINhxvPSgjF0vDNREQCJq1f+XrsRm\n82e70OGovwKBgQCa3qEGQ9+BRNrH/H8ZMaDe5b9RtkFHe4D/T0GNtkcRBvKLXQXY\n0yVprGytCgwKvP8M7ukCtAeXynT4tP6k0Em+mcsQ9o60tJOSkOLGNiYfXj0DWk82\nNz8icWVIHOH7wonxL/F8WKqHHEF3bOAJidduGnMV9kXXIT0wmmkbo5vnmQKBgEEE\nWa3N7Oew+0tmHtUhNyNl4rGGzqOTqHN+VyKEOXadDQfoxKT7GDj07ad/YJz1rnrW\ngnYp83pRayTyWEvZZ8gCJZKWJoOcSHPevgmRbMjzVQgSRThUPvkifGq1PMwhwmnw\nO3MDHrGh01/Llm/iXfKpWaCmqOonjP9Z9MDpCQzxAoGBALxELn1Lc15+YA/WBe7Q\nEVUtvZMdo7sVDGedopaEA4xZpKgwuf+uk3cbzMkgpzvCsCXZtnF4q+N6zQcO2Ogt\nYTg6Pg93b3lkpIRwcXcVIlGtXQOISCjuLbeRTXBZj4mLdZpBY1yCSeFaOav/R0x5\neMlIxFJKyDJNPJvPTDPHG6UI\n-----END PRIVATE KEY-----\n",
-    "client_email": "water-monitoring-app@water-monitor-system-488307.iam.gserviceaccount.com",
-    "client_id": "101213988596292556070",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/water-monitoring-app%40water-monitor-system-488307.iam.gserviceaccount.com",
-    "universe_domain": "googleapis.com"
-}
-
-
-@st.cache_resource
-def get_gspread_client():
-    """Authenticate and return a gspread client."""
-    creds = Credentials.from_service_account_info(GCP_CREDENTIALS, scopes=SCOPES)
-    client = gspread.authorize(creds)
-    return client
-
-
-def get_log_sheet(tab_name):
-    """Open a specific tab in the log spreadsheet."""
-    client = get_gspread_client()
-    spreadsheet = client.open_by_key(LOG_SHEET_ID)
-    return spreadsheet.worksheet(tab_name)
-
-
-# ---------------------------------------------------
-# EMAIL CONFIG
+# EMAIL CONFIG (LOCAL TESTING ONLY)
 # ---------------------------------------------------
 
 EMAIL_ADDRESS = st.secrets["EMAIL_ADDRESS"]
@@ -105,83 +62,59 @@ def send_email(subject, body, image_file=None):
         smtp.send_message(msg)
 
 # ---------------------------------------------------
-# LOG FUNCTIONS (Saving to Google Sheets)
+# LOG FILE PATHS
+# ---------------------------------------------------
+
+STOCK_LOG_FILE = "stock_alert_log.csv"
+ISSUE_LOG_FILE = "issue_log.csv"
+DAILY_LIMIT_FILE = "daily_stock_alert_limit.json"
+
+# ---------------------------------------------------
+# LOG FUNCTIONS
 # ---------------------------------------------------
 
 def append_stock_log(site_id, stock_value):
-    """Append a stock alert row to the 'Stock Alerts' tab."""
-    try:
-        sheet = get_log_sheet("Stock Alerts")
+    entry = {
+        "Site ID": site_id,
+        "Stock Level": stock_value,
+        "Alert Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
 
-        if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
-            sheet.append_row(["Site ID", "Stock Level", "Alert Date"])
+    if os.path.exists(STOCK_LOG_FILE):
+        df_log = pd.read_csv(STOCK_LOG_FILE)
+        df_log = pd.concat([df_log, pd.DataFrame([entry])], ignore_index=True)
+    else:
+        df_log = pd.DataFrame([entry])
 
-        row = [
-            site_id,
-            str(stock_value),
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ]
-        sheet.append_row(row)
-        return True
-    except Exception as e:
-        st.error(f"Failed to save stock alert to Google Sheet: {e}")
-        return False
+    df_log.to_csv(STOCK_LOG_FILE, index=False)
 
 
 def append_issue_log(site_id, description):
-    """Append an issue row to the 'Issue Log' tab."""
-    try:
-        sheet = get_log_sheet("Issue Log")
+    entry = {
+        "Site ID": site_id,
+        "Description": description,
+        "Issue Date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
 
-        if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
-            sheet.append_row(["Site ID", "Description", "Issue Date"])
+    if os.path.exists(ISSUE_LOG_FILE):
+        df_log = pd.read_csv(ISSUE_LOG_FILE)
+        df_log = pd.concat([df_log, pd.DataFrame([entry])], ignore_index=True)
+    else:
+        df_log = pd.DataFrame([entry])
 
-        row = [
-            site_id,
-            description,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ]
-        sheet.append_row(row)
-        return True
-    except Exception as e:
-        st.error(f"Failed to save issue to Google Sheet: {e}")
-        return False
+    df_log.to_csv(ISSUE_LOG_FILE, index=False)
 
 
 def load_daily_limit():
-    """Load daily limit data from the 'Daily Limit' tab."""
-    try:
-        sheet = get_log_sheet("Daily Limit")
-        records = sheet.get_all_records()
-
-        limits = {}
-        for row in records:
-            limits[str(row.get("Site ID", ""))] = str(row.get("Last Alert Date", ""))
-        return limits
-    except Exception:
-        return {}
+    if os.path.exists(DAILY_LIMIT_FILE):
+        with open(DAILY_LIMIT_FILE, "r") as f:
+            return json.load(f)
+    return {}
 
 
-def save_daily_limit(site_id, date_str):
-    """Update or insert a daily limit entry in the 'Daily Limit' tab."""
-    try:
-        sheet = get_log_sheet("Daily Limit")
-
-        if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
-            sheet.append_row(["Site ID", "Last Alert Date"])
-
-        all_values = sheet.get_all_values()
-        for i, row in enumerate(all_values):
-            if len(row) > 0 and str(row[0]).strip() == str(site_id).strip():
-                sheet.update_cell(i + 1, 2, date_str)
-                return True
-
-        sheet.append_row([site_id, date_str])
-        return True
-    except Exception as e:
-        st.error(f"Failed to save daily limit to Google Sheet: {e}")
-        return False
-
+def save_daily_limit(data):
+    with open(DAILY_LIMIT_FILE, "w") as f:
+        json.dump(data, f)
 
 # ---------------------------------------------------
 # SEARCH SECTION
@@ -252,9 +185,11 @@ if site_input:
                     )
 
                     append_stock_log(site_input, stock_value)
-                    save_daily_limit(site_input, today)
 
-                    st.success("📧 Alert Email Sent & Saved to Google Sheet")
+                    daily_limit[site_input] = today
+                    save_daily_limit(daily_limit)
+
+                    st.success("📧 Alert Email Sent")
             else:
                 st.info("Stock alert already sent today for this site.")
 
@@ -327,7 +262,7 @@ Description:
 
                 append_issue_log(site_input, issue_description)
 
-                st.success("✅ Issue submitted & saved to Google Sheet.")
+                st.success("✅ Issue submitted successfully.")
 
     else:
         st.error("❌ No matching Site ID found")
