@@ -5,7 +5,6 @@ Created on Sat Feb 14 12:10:34 2026
 @author: siddharth.dhodapkar_
 
 Updated: Google Sheets auto-save for logs (stock alerts, issues, daily limits)
-Credentials loaded from credentials.json file
 """
 
 import streamlit as st
@@ -15,8 +14,6 @@ from email.message import EmailMessage
 from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
-import json
-import os
 
 st.set_page_config(page_title="Water System Monitoring", layout="wide")
 
@@ -41,23 +38,49 @@ df = load_data()
 # ---------------------------------------------------
 # GOOGLE SHEETS WRITE CONFIG (For Logs)
 # ---------------------------------------------------
+# This connects to a SEPARATE Google Sheet for saving
+# stock alerts, issue logs, and daily limit tracking.
+#
+# SETUP INSTRUCTIONS:
+# 1. Go to https://console.cloud.google.com
+# 2. Create a project → Enable "Google Sheets API" & "Google Drive API"
+# 3. Create a Service Account → Download JSON key
+# 4. Add the JSON key contents to Streamlit secrets (see below)
+# 5. Create a NEW Google Sheet named "Water Monitor Logs"
+# 6. Share that sheet with the service account email (Editor access)
+# 7. Inside the sheet, create 3 tabs:
+#      - "Stock Alerts"
+#      - "Issue Log"
+#      - "Daily Limit"
+# ---------------------------------------------------
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
+# --- LOG SHEET ID ---
+# This is the ID from your Google Sheet URL:
+# https://docs.google.com/spreadsheets/d/<THIS_PART>/edit
 LOG_SHEET_ID = "1Wleb4aTjGF5OV5PDNoI7GzqNyD4TXDMyb9B-xFF5vL0"
 
 
 @st.cache_resource
 def get_gspread_client():
-    """
-    Authenticate using credentials.json file.
-    Place your Google Service Account JSON key file as 'credentials.json'
-    in the same folder as this script.
-    """
-    creds = Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
+    """Authenticate and return a gspread client using Streamlit secrets."""
+    creds_dict = {
+        "type": st.secrets["gcp_service_account"]["type"],
+        "project_id": st.secrets["gcp_service_account"]["project_id"],
+        "private_key_id": st.secrets["gcp_service_account"]["private_key_id"],
+        "private_key": st.secrets["gcp_service_account"]["private_key"],
+        "client_email": st.secrets["gcp_service_account"]["client_email"],
+        "client_id": st.secrets["gcp_service_account"]["client_id"],
+        "auth_uri": st.secrets["gcp_service_account"]["auth_uri"],
+        "token_uri": st.secrets["gcp_service_account"]["token_uri"],
+        "auth_provider_x509_cert_url": st.secrets["gcp_service_account"]["auth_provider_x509_cert_url"],
+        "client_x509_cert_url": st.secrets["gcp_service_account"]["client_x509_cert_url"],
+    }
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     client = gspread.authorize(creds)
     return client
 
@@ -98,7 +121,7 @@ def send_email(subject, body, image_file=None):
         smtp.send_message(msg)
 
 # ---------------------------------------------------
-# LOG FUNCTIONS (Saving to Google Sheets)
+# LOG FUNCTIONS (Now saving to Google Sheets!)
 # ---------------------------------------------------
 
 def append_stock_log(site_id, stock_value):
@@ -106,6 +129,7 @@ def append_stock_log(site_id, stock_value):
     try:
         sheet = get_log_sheet("Stock Alerts")
 
+        # Add headers if sheet is empty
         if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
             sheet.append_row(["Site ID", "Stock Level", "Alert Date"])
 
@@ -126,6 +150,7 @@ def append_issue_log(site_id, description):
     try:
         sheet = get_log_sheet("Issue Log")
 
+        # Add headers if sheet is empty
         if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
             sheet.append_row(["Site ID", "Description", "Issue Date"])
 
@@ -147,6 +172,7 @@ def load_daily_limit():
         sheet = get_log_sheet("Daily Limit")
         records = sheet.get_all_records()
 
+        # Convert list of dicts to {site_id: date} format
         limits = {}
         for row in records:
             limits[str(row.get("Site ID", ""))] = str(row.get("Last Alert Date", ""))
@@ -160,15 +186,19 @@ def save_daily_limit(site_id, date_str):
     try:
         sheet = get_log_sheet("Daily Limit")
 
+        # Add headers if sheet is empty
         if sheet.row_count == 0 or sheet.cell(1, 1).value is None:
             sheet.append_row(["Site ID", "Last Alert Date"])
 
+        # Check if site_id already exists → update it
         all_values = sheet.get_all_values()
         for i, row in enumerate(all_values):
             if len(row) > 0 and str(row[0]).strip() == str(site_id).strip():
+                # Found existing row → update column B (date)
                 sheet.update_cell(i + 1, 2, date_str)
                 return True
 
+        # Not found → append new row
         sheet.append_row([site_id, date_str])
         return True
     except Exception as e:
